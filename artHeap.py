@@ -12,7 +12,8 @@ import artClass as cls
 import artField as fld
 import artDex as dx
 import artJVM as jvm
-from utils import * 
+from utils import *
+import vdexUtils as vdex
 #-- End Import --#
 
 class android_heap():
@@ -34,7 +35,8 @@ class android_heap():
 	def getHeap(self, nPath, rAddr, memList):
 		index = get_index('Runtime', 'heap_')
 		heapAddr = self.readPointer(nPath, rAddr,index)
-		#print "Heap Offset "+ heapAddr
+		# print "Heap Offset "+ heapAddr
+		vdex.retrieveVdexFile(self, nPath, rAddr)
 		[heapPath, offset] = art.getOffset(heapAddr, memList)
 		return [heapPath, offset]
 			

@@ -636,4 +636,19 @@ types = {
 		'name_': [16],
 	}],
 
+	'VdexFile': [0x4, {
+		'mmap_': [0],
+	}],
+
+	'MemMap': [0x28, {
+		'name_': [0],
+		'begin_': [12],
+		'size_': [16],
+		'base_begin_': [20],
+		'base_size_': [24],
+		'prot_': [28],
+		'reuse_': [32],
+		'redzone_size_': [36],
+	}],
+
 }
