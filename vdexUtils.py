@@ -20,25 +20,29 @@ def retrieveVdexFile(proj_path, memList, mapList, listing, lstList, nPath, rAddr
 	[address] = art.getBss(lstList, proj_path, instance)
 	print "addr test " + str(address)
 
-	# [runtime, nPath, rAddr] = runtimeObj(address, memList)
-
 	proj_path_global = proj_path
 
 	heap_obj = heap.android_heap()
 
+	# Get beginning address of the heap.
 	heap_addr = getHeapAddr(heap_obj, nPath, rAddr)
 
-	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + 880)
+	boot_image_offset = get_index('Heap', 'boot_image_spaces_')
+	boot_image_space_begin_addr = hex(int(heap_addr, 16) + boot_image_offset)
 
-	[rt, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
-	print "rt " + str(rt)
-	print "npath " + str(nPath)
-	print "raddr " + str(hex(rAddr))
+	[ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_addr, memList)
+	print "ptr " + str(ptr)
 
-	test_addr = heap_obj.readPointer(nPath, rAddr, 0)
-	print "test addr " + str(test_addr)
+	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0)
+	print "image space addr " + str(image_space_addr)
 
-	print "Hello"
+	ofno_addr = hex(int(image_space_addr, 16) + 44)
+
+	[ptr, nPath, rAddr] = runtimeObj(ofno_addr, memList)
+	print "ptr " + str(ptr)
+
+	vdex_addr = heap_obj.readPointer(nPath, rAddr, 16)
+	print "vdex " + str(vdex_addr)
 
 def runtimeObj(address, memList):
 	[rPath, rAddr] = getOffset(address, memList)
