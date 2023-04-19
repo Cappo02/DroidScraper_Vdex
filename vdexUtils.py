@@ -27,11 +27,6 @@ def retrieveVdexFile(proj_path, memList, mapList, listing, lstList):
 
 	print "Hello"
 
-
-
-
-# getHeapAddr(heap_obj, nPath, rAddr)
-
 def runtimeObj(address, memList):
 	[rPath, rAddr] = getOffset(address, memList)
 	with open(rPath, 'rb') as g:
@@ -40,6 +35,16 @@ def runtimeObj(address, memList):
 		[nPath, nAddr] = getOffset(runtime, memList)
 		g.close()
 		return [runtime, nPath, nAddr]
+
+def getOffset(addr, alist):
+	start, key = findAddr(addr, alist)
+	if (start != 0):
+		offset = int(addr, 16) - int(start, 16)
+		aPath = proj_path_global + "/" + key
+	else:
+		offset = 0
+		aPath = None
+	return [aPath, offset]
 
 def findAddr(addr, lst):
 	addrInt = int(addr, 16)
@@ -54,22 +59,10 @@ def findAddr(addr, lst):
 			break
 	return start, key
 
-
-def getOffset(addr, alist):
-	start, key = findAddr(addr, alist)
-	if (start != 0):
-		offset = int(addr, 16) - int(start, 16)
-		aPath = proj_path_global + "/" + key
-	else:
-		offset = 0
-		aPath = None
-	return [aPath, offset]
-
 """
     Gets the pointer to the beginning of the Heap to start traversal 
     towards Vdex Files. 
 """
-
 
 def getHeapAddr(heap_obj, nPath, rAddr):
 	# Get index of Heap in Runtime.
