@@ -211,7 +211,7 @@ def usage():
 				[TLAB, NonTLAB, threads, bitmap_size_, heapBegin_] = getGlobals()
 				return [threads, hp, bitmap_size_, heapBegin_, nPath, rAddr, memList, mapList, listing,lstList,runtime]
 			elif (sys.argv[2] == "Vdex"):
-				vdex.retrieveVdexFile(path, memList, mapList, listing, lstList)
+				vdex.retrieveVdexFile(path, memList, mapList, listing, lstList, nPath, rAddr)
 			else:
 				print "Invalid Option"
 			

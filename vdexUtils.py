@@ -4,7 +4,7 @@
 """
 
 # -- Import --#
-# import artParse as art
+import artParse as art
 import artClass as cls
 import artField as fld
 import artDex as dx
@@ -13,17 +13,30 @@ import artHeap as heap
 from utils import *
 # -- End Import --#
 
-def retrieveVdexFile(proj_path, memList, mapList, listing, lstList):
+def retrieveVdexFile(proj_path, memList, mapList, listing, lstList, nPath, rAddr):
 	global proj_path_global
 
-	# instance = art.getRuntime(path)
-	# [address] = art.getBss(lstList, path, instance)
+	instance = art.getRuntime(proj_path)
+	[address] = art.getBss(lstList, proj_path, instance)
+	print "addr test " + str(address)
 
 	# [runtime, nPath, rAddr] = runtimeObj(address, memList)
 
 	proj_path_global = proj_path
 
 	heap_obj = heap.android_heap()
+
+	heap_addr = getHeapAddr(heap_obj, nPath, rAddr)
+
+	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + 880)
+
+	[rt, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
+	print "rt " + str(rt)
+	print "npath " + str(nPath)
+	print "raddr " + str(hex(rAddr))
+
+	test_addr = heap_obj.readPointer(nPath, rAddr, 0)
+	print "test addr " + str(test_addr)
 
 	print "Hello"
 
