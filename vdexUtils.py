@@ -14,10 +14,14 @@ from utils import *
 # -- End Import --#
 
 def retrieveVdexFile(proj_path, memList, mapList, listing, lstList):
+	global proj_path_global
+
 	# instance = art.getRuntime(path)
 	# [address] = art.getBss(lstList, path, instance)
 
 	# [runtime, nPath, rAddr] = runtimeObj(address, memList)
+
+	proj_path_global = proj_path
 
 	heap_obj = heap.android_heap()
 
@@ -55,7 +59,7 @@ def getOffset(addr, alist):
 	start, key = findAddr(addr, alist)
 	if (start != 0):
 		offset = int(addr, 16) - int(start, 16)
-		aPath = path + "/" + key
+		aPath = proj_path_global + "/" + key
 	else:
 		offset = 0
 		aPath = None
