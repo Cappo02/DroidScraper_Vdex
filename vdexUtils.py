@@ -16,6 +16,7 @@ from utils import *
 def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAddr):
 	global proj_path_global
 
+	# Assign global project path and create an Android Heap object for traversal.
 	proj_path_global = proj_path
 	heap_obj = heap.android_heap()
 
@@ -30,7 +31,7 @@ def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAdd
 	[ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
 	print "Pointer to first ImageSpace: " + str(ptr)
 
-	# Read the pointer to get pointer to get the address of the first ImageSpace.
+	# Read the pointer to get the address of the first ImageSpace.
 	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0)
 	print "ImageSpace address: " + str(image_space_addr)
 
