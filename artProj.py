@@ -11,7 +11,7 @@
 import sys
 import artParse as art
 from time import time
-from utils import * 
+from utils import *
 #-- End Import --#
 
 
@@ -179,6 +179,7 @@ def usage():
 		import artJVM2 as jvm2
 		from collections import OrderedDict
 		import struct
+		import vdexUtils as vdex
 		#import os, subprocess
 		#pid = os.getpid()
 		#procs = subprocess.check_output([ "lsof", '-w', '-Ff', "-p", str(pid)]).split('\n')
@@ -209,6 +210,8 @@ def usage():
 			elif (sys.argv[2]=="GetGlobs"):
 				[TLAB, NonTLAB, threads, bitmap_size_, heapBegin_] = getGlobals()
 				return [threads, hp, bitmap_size_, heapBegin_, nPath, rAddr, memList, mapList, listing,lstList,runtime]
+			elif (sys.argv[2] == "Vdex"):
+				vdex.retrieveVdexFile(path, memList, mapList, listing, lstList)
 			else:
 				print "Invalid Option"
 			

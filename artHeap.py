@@ -36,7 +36,7 @@ class android_heap():
 		index = get_index('Runtime', 'heap_')
 		heapAddr = self.readPointer(nPath, rAddr,index)
 		# print "Heap Offset "+ heapAddr
-		vdex.retrieveVdexFile(self, nPath, rAddr)
+		# vdex.retrieveVdexFile(self, nPath, rAddr)
 		[heapPath, offset] = art.getOffset(heapAddr, memList)
 		return [heapPath, offset]
 			
