@@ -14,8 +14,6 @@ from utils import *
 # -- End Import --#
 
 def retrieveVdexFile(proj_path, memList, mapList, listing, lstList):
-	# global path, nPath, rAddr, memList, mapList, listing, lstList, runtime
-
 	# instance = art.getRuntime(path)
 	# [address] = art.getBss(lstList, path, instance)
 
@@ -23,9 +21,9 @@ def retrieveVdexFile(proj_path, memList, mapList, listing, lstList):
 
 	heap_obj = heap.android_heap()
 
-
-
 	print "Hello"
+
+
 
 
 # getHeapAddr(heap_obj, nPath, rAddr)
@@ -39,6 +37,29 @@ def runtimeObj(address, memList):
 		g.close()
 		return [runtime, nPath, nAddr]
 
+def findAddr(addr, lst):
+	addrInt = int(addr, 16)
+	start = 0
+	end = 0
+	for key, value in lst.items():
+		v1 = int(value[1], 16)
+		v0 = int(value[0], 16)
+		if v0 <= addrInt < v1:
+			start = value[0]
+			end = value[1]
+			break
+	return start, key
+
+
+def getOffset(addr, alist):
+	start, key = findAddr(addr, alist)
+	if (start != 0):
+		offset = int(addr, 16) - int(start, 16)
+		aPath = path + "/" + key
+	else:
+		offset = 0
+		aPath = None
+	return [aPath, offset]
 
 """
     Gets the pointer to the beginning of the Heap to start traversal 
@@ -77,28 +98,3 @@ def getImageSpacePtrs(self, nPath, rAddr):
 	boot_image_space_begin_addr = self.readPointer(nPath, rAddr, boot_img_spaces_index)
 
 	print "Boot Image Space addr " + str(boot_image_space_begin_addr)
-
-
-def findAddr(addr, lst):
-	addrInt = int(addr, 16)
-	start = 0
-	end = 0
-	for key, value in lst.items():
-		v1 = int(value[1], 16)
-		v0 = int(value[0], 16)
-		if v0 <= addrInt < v1:
-			start = value[0]
-			end = value[1]
-			break
-	return start, key
-
-
-def getOffset(addr, alist):
-	start, key = findAddr(addr, alist)
-	if (start != 0):
-		offset = int(addr, 16) - int(start, 16)
-		aPath = path + "/" + key
-	else:
-		offset = 0
-		aPath = None
-	return [aPath, offset]
