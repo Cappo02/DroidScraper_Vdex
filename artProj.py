@@ -162,7 +162,8 @@ def help():
 	print "Runtime \t Print the ART offset\n"
 	print "Threads \t Print print threads names and tids\n"	
 	print "Heap\t \t Print Heap offset and regions metadata\n"
-	print "HeapDump \t Dump all heap allocations\n"	
+	print "HeapDump \t Dump all heap allocations\n"
+	print "Vdex \t \t Retrieve all associated VDEX files\n"
 	
 	
 def usage():
@@ -211,7 +212,7 @@ def usage():
 				[TLAB, NonTLAB, threads, bitmap_size_, heapBegin_] = getGlobals()
 				return [threads, hp, bitmap_size_, heapBegin_, nPath, rAddr, memList, mapList, listing,lstList,runtime]
 			elif (sys.argv[2] == "Vdex"):
-				vdex.retrieveVdexFile(path, memList, mapList, listing, lstList, nPath, rAddr)
+				vdex.retrieveVdexFiles(path, memList, mapList, listing, lstList, nPath, rAddr)
 			else:
 				print "Invalid Option"
 			

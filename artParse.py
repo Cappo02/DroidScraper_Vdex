@@ -117,7 +117,6 @@ def main(projPath):
 	global path, nPath, rAddr, memList, mapList, listing, lstList,runtime
 	path = projPath
 	instance = getRuntime(path)
-	print "instance test " + instance
 	lst = [filename for filename in os.listdir(path) if filename.endswith("lst")][0]
 	lstFile = path+"/"+lst
 	if lst=="mfetch.lst": # Its mefetch dump

@@ -13,36 +13,52 @@ import artHeap as heap
 from utils import *
 # -- End Import --#
 
-def retrieveVdexFile(proj_path, memList, mapList, listing, lstList, nPath, rAddr):
+def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAddr):
 	global proj_path_global
 
-	instance = art.getRuntime(proj_path)
-	[address] = art.getBss(lstList, proj_path, instance)
-	print "addr test " + str(address)
-
 	proj_path_global = proj_path
-
 	heap_obj = heap.android_heap()
 
 	# Get beginning address of the heap.
 	heap_addr = getHeapAddr(heap_obj, nPath, rAddr)
 
+	# Get pointer to the beginning of the vector for the boot image spaces.
 	boot_image_offset = get_index('Heap', 'boot_image_spaces_')
-	boot_image_space_begin_addr = hex(int(heap_addr, 16) + boot_image_offset)
+	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + boot_image_offset)
 
-	[ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_addr, memList)
-	print "ptr " + str(ptr)
+	# Get pointer to first ImageSpace
+	[ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
+	print "Pointer to first ImageSpace: " + str(ptr)
 
+	# Read the pointer to get pointer to get the address of the first ImageSpace.
 	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0)
-	print "image space addr " + str(image_space_addr)
+	print "ImageSpace address: " + str(image_space_addr)
 
-	ofno_addr = hex(int(image_space_addr, 16) + 44)
+	# Find the pointer to the OatFile non-owned within the ImageSpace.
+	ofno_offset = get_index('ImageSpace', 'oat_file_non_owned_')
+	ofno_ptr = hex(int(image_space_addr, 16) + ofno_offset)
 
-	[ptr, nPath, rAddr] = runtimeObj(ofno_addr, memList)
-	print "ptr " + str(ptr)
+	# Get address of the acquired OatFile non-owned.
+	[ofno_addr, nPath, rAddr] = runtimeObj(ofno_ptr, memList)
+	print "Address of OFNO: " + str(ofno_addr)
 
-	vdex_addr = heap_obj.readPointer(nPath, rAddr, 16)
-	print "vdex " + str(vdex_addr)
+	# Find pointer to VDEX within the OatFile non-owned.
+	vdex_offset = get_index('OatFile', 'vdex_')
+	vdex_ptr = heap_obj.readPointer(nPath, rAddr, vdex_offset)
+	print "Pointer to VDEX: " + str(vdex_ptr)
+
+	# Get the address of the associated MemMap within the VDEX.
+	[mem_map_addr, nPath, rAddr] = runtimeObj(vdex_ptr, memList)
+	print "Address of MemMap: " + mem_map_addr
+
+	# Find pointer to the beginning of the VDEX file.
+	begin_offset = get_index('MemMap', 'begin_')
+	vdex_begin_ptr = heap_obj.readPointer(nPath, rAddr, begin_offset)
+	print "Pointer to beginning of VDEX file: " + vdex_begin_ptr
+
+	# Find the VDEX file where raw data is stored.
+	[nPath, rAddr] = getOffset(vdex_begin_ptr, mapList)
+	print "File path of VDEX: " + str(nPath)
 
 def runtimeObj(address, memList):
 	[rPath, rAddr] = getOffset(address, memList)
@@ -60,7 +76,7 @@ def getOffset(addr, alist):
 		aPath = proj_path_global + "/" + key
 	else:
 		offset = 0
-		aPath = None
+		aPath = proj_path_global + "/" + key
 	return [aPath, offset]
 
 def findAddr(addr, lst):
