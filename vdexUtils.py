@@ -40,8 +40,10 @@ def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAdd
 	num_spaces = (int(last_img_spc_ptr, 16) - int(first_img_spc_ptr, 16)) / 4
 	print "num spaces " + str(num_spaces)
 
+	# Start loop here
+
 	# Read the pointer to get the address of the first ImageSpace.
-	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0)
+	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0) # Increment by 4 to grab next addr based on index.
 	print "ImageSpace address: " + str(image_space_addr)
 
 	# Find the pointer to the OatFile non-owned within the ImageSpace.
