@@ -28,8 +28,17 @@ def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAdd
 	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + boot_image_offset)
 
 	# Get pointer to first ImageSpace
-	[ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
-	print "Pointer to first ImageSpace: " + str(ptr)
+	[first_img_spc_ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
+	print "Pointer to first ImageSpace: " + str(first_img_spc_ptr)
+
+	# Get pointer to last ImageSpace
+	boot_image_space_end_ptr = hex(int(heap_addr, 16) + boot_image_offset + 4)
+	[last_img_spc_ptr, nPath2, rAddr2] = runtimeObj(boot_image_space_end_ptr, memList)
+	print "Pointer to last ImageSpace: " + str(last_img_spc_ptr)
+
+	# Get number of ImageSpaces
+	num_spaces = (int(last_img_spc_ptr, 16) - int(first_img_spc_ptr, 16)) / 4
+	print "num spaces " + str(num_spaces)
 
 	# Read the pointer to get the address of the first ImageSpace.
 	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0)
