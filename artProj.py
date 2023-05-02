@@ -154,7 +154,7 @@ def getIRefs():
 		print jvm.findThreadGCRoot(refs, lstList, mapList)
 	
 def help():
-	print "Usage: pypy artProj Command\n" 
+	print "Usage: pypy artProj Command\n"
 
 	#print "Options:\n"
 	#print "-h, --help \t list all available options and their default values.\n"
