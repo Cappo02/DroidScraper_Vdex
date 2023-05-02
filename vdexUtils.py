@@ -11,9 +11,10 @@ import artDex as dx
 import artJVM as jvm
 import artHeap as heap
 from utils import *
+import os
 # -- End Import --#
 
-def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAddr):
+def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 	global proj_path_global
 
 	# Assign global project path and create an Android Heap object for traversal.
@@ -69,8 +70,53 @@ def retrieveVdexFiles(proj_path, memList, mapList, listing, lstList, nPath, rAdd
 	print "Pointer to beginning of VDEX file: " + vdex_begin_ptr
 
 	# Find the VDEX file where raw data is stored.
-	[nPath, rAddr] = getOffset(vdex_begin_ptr, mapList)
-	print "File path of VDEX: " + str(nPath)
+	[vdex_path, rAddr] = getOffset(vdex_begin_ptr, mapList)
+	print "File path of VDEX: " + str(vdex_path)
+
+	# Open VDEX file to dump DEX and verify proper VDEX format.
+	with open(vdex_path, "r") as vdex_file:
+
+		# Check that first 8 bytes of file are vdex006\0 since
+		# this is a valid signature for a VDEX file.
+		first_line = vdex_file.readline()
+
+		vdex_verify = first_line[0:8]
+		# print vdex_verify
+
+		# If file is VDEX, dump DEX into specified directory in params.
+		if (vdex_verify == "vdex006\0"):
+			# Get number of DEX files. Since unpack can only do 2 bytes,
+			# have to do in 2 byte blocks and add together to get total number.
+			num_dex_1 = struct.unpack("h", first_line[8:10])[0]
+			num_dex_2 = struct.unpack("h", first_line[10:12])[0]
+
+			total_num_dex = num_dex_1 + num_dex_2
+			print "num dex " + str(total_num_dex)
+
+			index = 0
+			complete_path = os.path.join(dump_dir, "test_dump_" + str(index) + ".txt")
+			print(complete_path)
+
+			# Go back to start of file and read starting after VDEX header.
+			vdex_file.seek(0, 0)
+			read_file = vdex_file.read()
+
+			print read_file[24+32:24+32+4]
+			size_dex_1 = struct.unpack("h", read_file[24+32:24+32+2])[0]
+			size_dex_2 = struct.unpack("h", read_file[24+32+2:24+32+4])[0]
+			print size_dex_2
+			print size_dex_1
+
+			print struct.unpack("h", "ff")[0]
+
+			with open(complete_path, "wt") as out_file:
+				out_file.write(read_file[24:])
+
+			print "Dumped DEX files."
+
+		else:
+			print "File is not a valid VDEX file."
+			return
 
 def runtimeObj(address, memList):
 	[rPath, rAddr] = getOffset(address, memList)

@@ -163,7 +163,9 @@ def help():
 	print "Threads \t Print print threads names and tids\n"	
 	print "Heap\t \t Print Heap offset and regions metadata\n"
 	print "HeapDump \t Dump all heap allocations\n"
-	print "Vdex \t \t Retrieve all associated VDEX files\n"
+	print "Vdex \t \t Dump all associated DEX files\n" \
+		  "\t \t Format command with directory as argument 2 \n" \
+		  "\t \t and the directory to dump to in argument 3 \n"
 	
 	
 def usage():
@@ -211,8 +213,8 @@ def usage():
 			elif (sys.argv[2]=="GetGlobs"):
 				[TLAB, NonTLAB, threads, bitmap_size_, heapBegin_] = getGlobals()
 				return [threads, hp, bitmap_size_, heapBegin_, nPath, rAddr, memList, mapList, listing,lstList,runtime]
-			elif (sys.argv[2] == "Vdex"):
-				vdex.retrieveVdexFiles(path, memList, mapList, listing, lstList, nPath, rAddr)
+			elif (sys.argv[3] == "Vdex"):
+				vdex.retrieveVdexFiles(path, memList, mapList, nPath, rAddr, sys.argv[2])
 			else:
 				print "Invalid Option"
 			

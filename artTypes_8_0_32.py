@@ -651,4 +651,13 @@ types = {
 		'redzone_size_': [36],
 	}],
 
+	'VdexHeader': [0x18, {
+		'magic_': [0],
+		'version_': [4],
+		'number_of_dex_files': [8],
+		'dex_size_': [12],
+		'verifier_deps_size_': [16],
+		'quickening_info_size': [20],
+	}],
+
 }
