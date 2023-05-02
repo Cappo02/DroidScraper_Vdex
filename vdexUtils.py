@@ -102,12 +102,12 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 			read_file = vdex_file.read()
 
 			print read_file[24+32:24+32+4]
-			size_dex_1 = struct.unpack("h", read_file[24+32:24+32+2])[0]
-			size_dex_2 = struct.unpack("h", read_file[24+32+2:24+32+4])[0]
+			size_dex_1 = struct.unpack("<H", read_file[24+32:24+32+2])[0]
+			size_dex_2 = struct.unpack("<H", read_file[24+32+2:24+32+4])[0]
 			print size_dex_2
 			print size_dex_1
 
-			print struct.unpack("h", "ff")[0]
+			print struct.unpack("<H", "\xff\xff")[0]
 
 			with open(complete_path, "wt") as out_file:
 				out_file.write(read_file[24:])
