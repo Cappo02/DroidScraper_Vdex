@@ -87,41 +87,45 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 
 			# If file is VDEX, dump DEX into specified directory in params.
 			if (vdex_verify == "vdex006\0"):
-				# Get number of DEX files.
+				# Get number of DEX files in VDEX.
 				total_num_dex = struct.unpack("<HH", read_file[8:12])[0]
 				print "Number of DEX files: " + str(total_num_dex)
 
-				# Get size of DEX file
-				size_dex_1 = struct.unpack("<H", read_file[24 + (total_num_dex * 4) + 32 : 24 + (total_num_dex * 4) + 34])[0]
-				size_dex_2 = struct.unpack("<H", read_file[24 + (total_num_dex * 4) + 34 : 24 + (total_num_dex * 4) + 36])[0]
+				# dex_index is the number of bytes read in the VDEX file so far.
+				# Initialized to the size of the VDEX header (0x18) + the number of
+				# DEX files * 4. There seems to be a pattern where after the VDEX
+				# Header, there is some form of spacing that is 4*total_num_dex long.
+				read_bytes = 24 + (total_num_dex * 4)
+				dex_index = 0
+				for dex_file in range(0, total_num_dex):
+					# Get size of DEX file. Has to be done in parts of 4 hex digits since unpack
+					# only does this even when format and number of bytes to read is extended.
+					size_dex_1 = struct.unpack("<H", read_file[read_bytes + 32 : read_bytes + 34])[0]
+					size_dex_2 = struct.unpack("<H", read_file[read_bytes + 34 : read_bytes + 36])[0]
 
-				total_dex_size = hex((int(hex(size_dex_2), 16) << 16) | int(hex(size_dex_1), 16))
+					total_dex_size = hex((int(hex(size_dex_2), 16) << 16) | int(hex(size_dex_1), 16))
 
-				print "Size of DEX: " + total_dex_size
+					print "Size of DEX " + str(dex_index + 1) + ": " + total_dex_size
 
-				# Get size of dex file from 32 bytes after start of header.
-				# dex_index = 0
-				# complete_path = os.path.join(dump_dir, "test_dump_" + str(dex_index) + ".txt")
-				# print(complete_path)
-				#
-				# # Go back to start of file and read starting after VDEX header.
-				# vdex_file.seek(0, 0)
-				# read_file = vdex_file.read()
-				#
-				# print read_file[24+32:24+32+4]
-				# size_dex_1 = struct.unpack("<H", read_file[24+32:24+32+2])[0]
-				# size_dex_2 = struct.unpack("<H", read_file[24+32+2:24+32+4])[0]
-				# print size_dex_2
-				# print size_dex_1
-				#
-				# print struct.unpack("<H", "\xff\xff")[0]
-				#
-				# with open(complete_path, "wt") as out_file:
-				# 	out_file.write(read_file[24:])
-				#
-				# print "Dumped DEX files."
+					# Get name of bin file that is being read from.
+					start_file_name_index = vdex_path.rfind('/')
+					file_name_extensions_start = vdex_path.rfind('.')
+					file_name = vdex_path[start_file_name_index + 1:file_name_extensions_start]
 
-				print "\n"
+					# Create complete path and file name to dump DEX file to.
+					complete_path = os.path.join(dump_dir, file_name + "_dex_" + str(dex_index) + ".bin")
+
+					# Write DEX data to file.
+					with open(complete_path, "wt") as out_file:
+						out_file.write(read_file[read_bytes : int(total_dex_size, 16) + read_bytes])
+
+					# Add the number of bytes just read to know where to start for
+					# the next DEX file.
+					read_bytes += int(total_dex_size, 16)
+
+					dex_index += 1
+
+				print "Successfully dumped all DEX files.\n"
 
 			else:
 				print "File is not a valid VDEX file.\n"
