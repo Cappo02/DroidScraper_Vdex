@@ -29,7 +29,7 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + boot_image_offset)
 
 	# Get pointer to first ImageSpace
-	[first_img_spc_ptr, nPath, rAddr] = runtimeObj(boot_image_space_begin_ptr, memList)
+	[first_img_spc_ptr, nPathMaster, rAddrMaster] = runtimeObj(boot_image_space_begin_ptr, memList)
 	print "Pointer to first ImageSpace: " + str(first_img_spc_ptr)
 
 	# Get pointer to last ImageSpace
@@ -39,84 +39,89 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 
 	# Get number of ImageSpaces
 	num_spaces = (int(last_img_spc_ptr, 16) - int(first_img_spc_ptr, 16)) / 4
-	print "num spaces " + str(num_spaces)
+	print "Number of ImageSpaces: " + str(num_spaces) + "\n"
 
 	# Start loop here
+	index = 0
+	for image_space in range(0, num_spaces):
+		# Read the pointer to get the address of the first ImageSpace.
+		image_space_addr = heap_obj.readPointer(nPathMaster, rAddrMaster, index * 4) # Increment by 4 to grab next addr based on index.
+		print "ImageSpace address: " + str(image_space_addr)
 
-	# Read the pointer to get the address of the first ImageSpace.
-	image_space_addr = heap_obj.readPointer(nPath, rAddr, 0) # Increment by 4 to grab next addr based on index.
-	print "ImageSpace address: " + str(image_space_addr)
+		# Find the pointer to the OatFile non-owned within the ImageSpace.
+		ofno_offset = get_index('ImageSpace', 'oat_file_non_owned_')
+		ofno_ptr = hex(int(image_space_addr, 16) + ofno_offset)
 
-	# Find the pointer to the OatFile non-owned within the ImageSpace.
-	ofno_offset = get_index('ImageSpace', 'oat_file_non_owned_')
-	ofno_ptr = hex(int(image_space_addr, 16) + ofno_offset)
+		# Get address of the acquired OatFile non-owned.
+		[ofno_addr, nPath, rAddr] = runtimeObj(ofno_ptr, memList)
+		print "Address of OFNO: " + str(ofno_addr)
 
-	# Get address of the acquired OatFile non-owned.
-	[ofno_addr, nPath, rAddr] = runtimeObj(ofno_ptr, memList)
-	print "Address of OFNO: " + str(ofno_addr)
+		# Find pointer to VDEX within the OatFile non-owned.
+		vdex_offset = get_index('OatFile', 'vdex_')
+		vdex_ptr = heap_obj.readPointer(nPath, rAddr, vdex_offset)
+		print "Pointer to VDEX: " + str(vdex_ptr)
 
-	# Find pointer to VDEX within the OatFile non-owned.
-	vdex_offset = get_index('OatFile', 'vdex_')
-	vdex_ptr = heap_obj.readPointer(nPath, rAddr, vdex_offset)
-	print "Pointer to VDEX: " + str(vdex_ptr)
+		# Get the address of the associated MemMap within the VDEX.
+		[mem_map_addr, nPath, rAddr] = runtimeObj(vdex_ptr, memList)
+		print "Address of MemMap: " + mem_map_addr
 
-	# Get the address of the associated MemMap within the VDEX.
-	[mem_map_addr, nPath, rAddr] = runtimeObj(vdex_ptr, memList)
-	print "Address of MemMap: " + mem_map_addr
+		# Find pointer to the beginning of the VDEX file.
+		begin_offset = get_index('MemMap', 'begin_')
+		vdex_begin_ptr = heap_obj.readPointer(nPath, rAddr, begin_offset)
+		print "Pointer to beginning of VDEX file: " + vdex_begin_ptr
 
-	# Find pointer to the beginning of the VDEX file.
-	begin_offset = get_index('MemMap', 'begin_')
-	vdex_begin_ptr = heap_obj.readPointer(nPath, rAddr, begin_offset)
-	print "Pointer to beginning of VDEX file: " + vdex_begin_ptr
+		# Find the VDEX file where raw data is stored.
+		[vdex_path, rAddr] = getOffset(vdex_begin_ptr, mapList)
+		print "File path of VDEX: " + str(vdex_path)
 
-	# Find the VDEX file where raw data is stored.
-	[vdex_path, rAddr] = getOffset(vdex_begin_ptr, mapList)
-	print "File path of VDEX: " + str(vdex_path)
+		# Open VDEX file to dump DEX and verify proper VDEX format.
+		with open(vdex_path, "r") as vdex_file:
 
-	# Open VDEX file to dump DEX and verify proper VDEX format.
-	with open(vdex_path, "r") as vdex_file:
+			# Check that first 8 bytes of file are vdex006\0 since
+			# this is a valid signature for a VDEX file.
+			first_line = vdex_file.readline()
 
-		# Check that first 8 bytes of file are vdex006\0 since
-		# this is a valid signature for a VDEX file.
-		first_line = vdex_file.readline()
+			vdex_verify = first_line[0:8]
+			# print vdex_verify
 
-		vdex_verify = first_line[0:8]
-		# print vdex_verify
+			# If file is VDEX, dump DEX into specified directory in params.
+			if (vdex_verify == "vdex006\0"):
+				# Get number of DEX files. Since unpack can only do 2 bytes,
+				# have to do in 2 byte blocks and add together to get total number.
+				num_dex_1 = struct.unpack("h", first_line[8:10])[0]
+				num_dex_2 = struct.unpack("h", first_line[10:12])[0]
 
-		# If file is VDEX, dump DEX into specified directory in params.
-		if (vdex_verify == "vdex006\0"):
-			# Get number of DEX files. Since unpack can only do 2 bytes,
-			# have to do in 2 byte blocks and add together to get total number.
-			num_dex_1 = struct.unpack("h", first_line[8:10])[0]
-			num_dex_2 = struct.unpack("h", first_line[10:12])[0]
+				total_num_dex = num_dex_1 + num_dex_2
+				print "num dex " + str(total_num_dex)
 
-			total_num_dex = num_dex_1 + num_dex_2
-			print "num dex " + str(total_num_dex)
+				# Get size of dex file from 32 bytes after start of header.
+				# dex_index = 0
+				# complete_path = os.path.join(dump_dir, "test_dump_" + str(dex_index) + ".txt")
+				# print(complete_path)
+				#
+				# # Go back to start of file and read starting after VDEX header.
+				# vdex_file.seek(0, 0)
+				# read_file = vdex_file.read()
+				#
+				# print read_file[24+32:24+32+4]
+				# size_dex_1 = struct.unpack("<H", read_file[24+32:24+32+2])[0]
+				# size_dex_2 = struct.unpack("<H", read_file[24+32+2:24+32+4])[0]
+				# print size_dex_2
+				# print size_dex_1
+				#
+				# print struct.unpack("<H", "\xff\xff")[0]
+				#
+				# with open(complete_path, "wt") as out_file:
+				# 	out_file.write(read_file[24:])
+				#
+				# print "Dumped DEX files."
 
-			index = 0
-			complete_path = os.path.join(dump_dir, "test_dump_" + str(index) + ".txt")
-			print(complete_path)
+				print "\n"
 
-			# Go back to start of file and read starting after VDEX header.
-			vdex_file.seek(0, 0)
-			read_file = vdex_file.read()
+			else:
+				print "File is not a valid VDEX file."
 
-			print read_file[24+32:24+32+4]
-			size_dex_1 = struct.unpack("<H", read_file[24+32:24+32+2])[0]
-			size_dex_2 = struct.unpack("<H", read_file[24+32+2:24+32+4])[0]
-			print size_dex_2
-			print size_dex_1
-
-			print struct.unpack("<H", "\xff\xff")[0]
-
-			with open(complete_path, "wt") as out_file:
-				out_file.write(read_file[24:])
-
-			print "Dumped DEX files."
-
-		else:
-			print "File is not a valid VDEX file."
-			return
+		index = index + 1
 
 def runtimeObj(address, memList):
 	[rPath, rAddr] = getOffset(address, memList)
