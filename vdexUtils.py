@@ -34,7 +34,7 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 
 	# Get pointer to last ImageSpace
 	boot_image_space_end_ptr = hex(int(heap_addr, 16) + boot_image_offset + 4)
-	[last_img_spc_ptr, nPath2, rAddr2] = runtimeObj(boot_image_space_end_ptr, memList)
+	[last_img_spc_ptr, nPath_unused, rAddr_unused] = runtimeObj(boot_image_space_end_ptr, memList)
 	print "Pointer to last ImageSpace: " + str(last_img_spc_ptr)
 
 	# Get number of ImageSpaces
@@ -79,20 +79,25 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 
 			# Check that first 8 bytes of file are vdex006\0 since
 			# this is a valid signature for a VDEX file.
-			first_line = vdex_file.readline()
 
-			vdex_verify = first_line[0:8]
+			read_file = vdex_file.read()
+
+			vdex_verify = read_file[0:8]
 			# print vdex_verify
 
 			# If file is VDEX, dump DEX into specified directory in params.
 			if (vdex_verify == "vdex006\0"):
-				# Get number of DEX files. Since unpack can only do 2 bytes,
-				# have to do in 2 byte blocks and add together to get total number.
-				num_dex_1 = struct.unpack("h", first_line[8:10])[0]
-				num_dex_2 = struct.unpack("h", first_line[10:12])[0]
+				# Get number of DEX files.
+				total_num_dex = struct.unpack("<HH", read_file[8:12])[0]
+				print "Number of DEX files: " + str(total_num_dex)
 
-				total_num_dex = num_dex_1 + num_dex_2
-				print "num dex " + str(total_num_dex)
+				# Get size of DEX file
+				size_dex_1 = struct.unpack("<H", read_file[24 + (total_num_dex * 4) + 32 : 24 + (total_num_dex * 4) + 34])[0]
+				size_dex_2 = struct.unpack("<H", read_file[24 + (total_num_dex * 4) + 34 : 24 + (total_num_dex * 4) + 36])[0]
+
+				total_dex_size = hex((int(hex(size_dex_2), 16) << 16) | int(hex(size_dex_1), 16))
+
+				print "Size of DEX: " + total_dex_size
 
 				# Get size of dex file from 32 bytes after start of header.
 				# dex_index = 0
@@ -119,7 +124,7 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 				print "\n"
 
 			else:
-				print "File is not a valid VDEX file."
+				print "File is not a valid VDEX file.\n"
 
 		index = index + 1
 
