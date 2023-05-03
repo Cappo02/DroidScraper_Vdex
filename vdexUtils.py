@@ -28,7 +28,8 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 	boot_image_offset = get_index('Heap', 'boot_image_spaces_')
 	boot_image_space_begin_ptr = hex(int(heap_addr, 16) + boot_image_offset)
 
-	# Get pointer to first ImageSpace
+	# Get pointer to first ImageSpace. The nPathMaster and rAddrMaster are used
+	# to find all other ImageSpace pointers.
 	[first_img_spc_ptr, nPathMaster, rAddrMaster] = runtimeObj(boot_image_space_begin_ptr, memList)
 	print "Pointer to first ImageSpace: " + str(first_img_spc_ptr)
 
