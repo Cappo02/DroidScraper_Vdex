@@ -113,8 +113,13 @@ def retrieveVdexFiles(proj_path, memList, mapList, nPath, rAddr, dump_dir):
 					file_name_extensions_start = vdex_path.rfind('.')
 					file_name = vdex_path[start_file_name_index + 1:file_name_extensions_start]
 
+					file_dump_dir = os.path.join(dump_dir, file_name)
+
+					if(not os.path.exists(file_dump_dir)):
+						os.mkdir(file_dump_dir)
+
 					# Create complete path and file name to dump DEX file to.
-					complete_path = os.path.join(dump_dir, file_name + "_dex_" + str(dex_index) + ".bin")
+					complete_path = os.path.join(file_dump_dir, file_name + "_dex_" + str(dex_index + 1) + ".dex")
 
 					# Write DEX data to file.
 					with open(complete_path, "wt") as out_file:
